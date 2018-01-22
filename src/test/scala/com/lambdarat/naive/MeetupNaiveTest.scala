@@ -3,7 +3,7 @@ package com.lambdarat.naive
 import com.lambdarat.common.Domain.{Group, User}
 import org.scalatest.{FlatSpec, Matchers}
 
-class MeetupTest extends FlatSpec with Matchers {
+class MeetupNaiveTest extends FlatSpec with Matchers {
 
   private val meetup = new MeetupImpl
 

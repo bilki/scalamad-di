@@ -38,5 +38,18 @@ object Domain {
 
   case class NotifierError(err: String) extends MeetupError
 
+  sealed trait GroupEvent {
+
+    def uid: User.Id
+
+  }
+
+  object GroupEvent {
+
+    case class UserRemoved(uid: User.Id) extends GroupEvent
+
+    case class UserAdded(uid: User.Id) extends GroupEvent
+
+  }
 
 }

@@ -1,12 +1,9 @@
-package com.lambdarat.naive
+package com.lambdarat.manual
 
-import com.lambdarat.common.Domain.{Group, GroupsError, MeetupError, User}
-import com.lambdarat.common.services.{Notifier, NotifierImpl}
-import com.lambdarat.common.Domain.GroupEvent
+import com.lambdarat.common.Domain._
+import com.lambdarat.common.services.Notifier
 
-class ManagerImpl extends Manager {
-
-  private val notifier: Notifier = new NotifierImpl
+class ManagerImpl(notifier: Notifier) extends Manager {
 
   def addUserToGroup(user: User, group: Group): Either[MeetupError, Group] = {
 

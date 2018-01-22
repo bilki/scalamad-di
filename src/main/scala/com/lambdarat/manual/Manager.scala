@@ -1,4 +1,4 @@
-package com.lambdarat.naive
+package com.lambdarat.manual
 
 import com.lambdarat.common.Domain.{Group, MeetupError, User}
 

@@ -1,24 +1,23 @@
-package com.lambdarat.naive
+package com.lambdarat.common.services
 
-import com.lambdarat.common.Domain.{Group, NotifierError, User}
+import com.lambdarat.common.Domain.{Group, GroupEvent, NotifierError, User}
 
 import cats.data.EitherT
 
 class NotifierImpl extends Notifier {
 
-  override def notifyManagerEvent(event: Manager.Event, group: Group): Either[NotifierError, Seq[User.Id]] = {
+  override def notifyManagerEvent(event: GroupEvent, group: Group): Either[NotifierError, Seq[User.Id]] = {
 
     def userWithoutId(gid: Group.Id) = NotifierError(s"One of the users of the group $gid has no uid")
 
     lazy val groupWithoutId = NotifierError(s"The group ${group.name} has no identifier")
 
     def eventMessage(name: User.Name, gid: Group.Id) = event match {
-      case add: Manager.UserAdded     => s"Hi $name, the user ${add.uid} just joined the group $gid"
-      case left: Manager.UserRemoved  => s"Hi $name, the user ${left.uid} just left the group $gid"
+      case add: GroupEvent.UserAdded     => s"Hi $name, the user ${add.uid} just joined the group $gid"
+      case left: GroupEvent.UserRemoved  => s"Hi $name, the user ${left.uid} just left the group $gid"
     }
 
     import cats.instances.list._
-    import cats.syntax.traverse._
 
     val attemptNotifications = for {
       gid   <- EitherT.fromEither(group.gid.toRight(groupWithoutId))
@@ -31,6 +30,7 @@ class NotifierImpl extends Notifier {
     }
 
     import cats.instances.either._
+    import cats.syntax.traverse._
 
     attemptNotifications.value.sequence.map(_.toSeq)
 
