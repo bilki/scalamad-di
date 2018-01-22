@@ -1,13 +1,13 @@
-package com.lambdarat.manual
+package com.lambdarat.implicits
 
 import com.lambdarat.common.Domain.{Group, GroupEvent, NotifierError, User}
 import com.lambdarat.common.services.{GroupsImpl, Notifier, UsersImpl}
 import org.scalatest.{FlatSpec, Matchers}
 
-class MeetupManualTest extends FlatSpec with Matchers {
+class MeetupImplicitsTest extends FlatSpec with Matchers {
 
   // This notifier does not notify anybody
-  private val mockNotifier = new Notifier {
+  private implicit val mockNotifier = new Notifier {
 
     override def notifyManagerEvent(event: GroupEvent, group: Group): Either[NotifierError, Seq[User.Id]] = {
       println(s"Not notifying users of group ${group.gid}")
@@ -24,28 +24,30 @@ class MeetupManualTest extends FlatSpec with Matchers {
 
   }
 
-  private val manager = new ManagerImpl(mockNotifier)
+  private implicit val manager = ManagerImpl
 
-  private val users = new UsersImpl
+  private implicit val users = new UsersImpl
 
-  private val groups = new GroupsImpl
+  private implicit val groups = new GroupsImpl
 
-  private val meetup = new MeetupImpl(users, groups, manager)
+  private val meetup = MeetupImpl
 
-  "A meetup" should "add a user to a group if both exist" in {
+  "A meetup" should "remove a user from a group if it exists" in {
 
-    val joinAttempt = for {
+    // No user notified in real life
+    val removeAttempt = for {
       uid   <- meetup.registerUser(User.Name("Pepe"), User.Age(25))
       gid   <- meetup.registerGroup(Group.Name("ScalaMAD"))
-      group <- meetup.joinUserToGroup(uid, gid)  // No user notified in real life
+      group <- meetup.joinUserToGroup(uid, gid)
     } yield {
 
-      group.gid shouldBe Some(gid)
+      group.gid shouldBe defined
+      group.gid.map(_ shouldBe gid)
 
       group.users should have size 1
     }
 
-    joinAttempt shouldBe a[Right[_, _]]
+    removeAttempt shouldBe a[Right[_, _]]
 
   }
 

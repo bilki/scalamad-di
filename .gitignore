@@ -25,3 +25,7 @@ project/.sbtserver.lock
 
 # Intellij specific
 .idea/
+
+# Ensime generated files
+.ensime_cache/
+.ensime

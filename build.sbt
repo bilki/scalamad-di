@@ -18,3 +18,5 @@ lazy val scalamad_di = (project in file(".")).
   )
 
 scalacOptions += "-Ypartial-unification"
+
+parallelExecution in Test := false

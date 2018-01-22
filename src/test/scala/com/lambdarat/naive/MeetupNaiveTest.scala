@@ -7,22 +7,24 @@ class MeetupNaiveTest extends FlatSpec with Matchers {
 
   private val meetup = new MeetupImpl
 
-  "A meetup" should "remove a user from a group if it exists" in {
+  "A meetup" should "add a user to a group if both exist" in {
 
     // Notifying users!
-    val removeAttempt = for {
+    val joinAttempt = for {
       uid   <- meetup.registerUser(User.Name("Pepe"), User.Age(25))
+      uid2  <- meetup.registerUser(User.Name("Antonio"), User.Age(30))
       gid   <- meetup.registerGroup(Group.Name("ScalaMAD"))
-      group <- meetup.joinUserToGroup(uid, gid)
+      _     <- meetup.joinUserToGroup(uid, gid)
+      group <- meetup.joinUserToGroup(uid2, gid)
     } yield {
 
-      group.gid shouldBe defined
-      group.gid.map(_ shouldBe gid)
+      group.gid shouldBe Some(gid)
 
-      group.users should have size 1
+      group.users should have size 2
+
     }
 
-    removeAttempt shouldBe a[Right[_, _]]
+    joinAttempt shouldBe a[Right[_, _]]
 
   }
 

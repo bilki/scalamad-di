@@ -1,14 +1,11 @@
-package com.lambdarat.naive
+package com.lambdarat.implicits
 
-import com.lambdarat.common.Domain.{Group, GroupsError, MeetupError, User}
-import com.lambdarat.common.services.{Notifier, NotifierImpl}
-import com.lambdarat.common.Domain.GroupEvent
+import com.lambdarat.common.Domain._
+import com.lambdarat.common.services.Notifier
 
-class ManagerImpl extends Manager {
+object ManagerImpl extends Manager {
 
-  private val notifier: Notifier = new NotifierImpl
-
-  override def addUserToGroup(user: User, group: Group): Either[MeetupError, Group] = {
+  def addUserToGroup(user: User, group: Group)(implicit notifier: Notifier): Either[MeetupError, Group] = {
 
     lazy val alreadyPresentError = GroupsError(s"User with uid ${user.uid} is already present in group ${group.gid}")
 
@@ -24,7 +21,7 @@ class ManagerImpl extends Manager {
 
   }
 
-  def removeUserFromGroup(uid: User.Id, group: Group): Either[MeetupError, Group] = {
+  def removeUserFromGroup(uid: User.Id, group: Group)(implicit notifier: Notifier): Either[MeetupError, Group] = {
 
     lazy val notPresentError = GroupsError(s"User with uid $uid is not present in group ${group.gid}")
 
