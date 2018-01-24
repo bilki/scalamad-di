@@ -7,25 +7,19 @@ import org.scalatest.{FlatSpec, Matchers}
 class MeetupCakeTest extends FlatSpec with Matchers {
 
   // This notifier does not notify anybody
-  private val mockNotifier = new Notifier {
-
-    override def notifyManagerEvent(event: GroupEvent, group: Group): Either[NotifierError, Seq[User.Id]] = {
-      println(s"Not notifying users of group ${group.gid}")
-
-      val userIds = group.users.collect { case User(_, _, Some(id)) => id }
-
-      val mockedResult: Either[NotifierError, Seq[User.Id]] = event match {
-        case GroupEvent.UserAdded(uid)    => Right(uid +: userIds)
-        case GroupEvent.UserRemoved(uid)  => Right(userIds.filter(_ != uid))
-      }
-
-      mockedResult
-    }
-
-  }
-
   trait NotifierComponentMockImpl extends NotifierComponent {
-    override def notifier: Notifier = mockNotifier
+    override val notifier: Notifier = (event: GroupEvent, group: Group) => {
+        println(s"Not notifying users of group ${group.gid}")
+
+        val userIds = group.users.collect { case User(_, _, Some(id)) => id }
+
+        val mockedResult: Either[NotifierError, Seq[User.Id]] = event match {
+          case GroupEvent.UserAdded(uid)    => Right(uid +: userIds)
+          case GroupEvent.UserRemoved(uid)  => Right(userIds.filter(_ != uid))
+        }
+
+        mockedResult
+      }
   }
 
   val meetup = new MeetupImpl

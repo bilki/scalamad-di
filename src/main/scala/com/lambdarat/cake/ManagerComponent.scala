@@ -2,7 +2,7 @@ package com.lambdarat.cake
 
 import com.lambdarat.common.Domain.{Group, MeetupError, User}
 
-trait ManagerComponent { self: NotifierComponent =>
+trait ManagerComponent {
 
   def manager: Manager
 

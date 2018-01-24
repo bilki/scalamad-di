@@ -13,7 +13,8 @@ lazy val scalamad_di = (project in file(".")).
     name := "scalamad-di",
     libraryDependencies ++= Seq(
       scalaTest % Test,
-      cats
+      cats,
+      guice
     )
   )
 
