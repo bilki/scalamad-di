@@ -1,70 +1,80 @@
 package com.lambdarat.functional
 
-import com.lambdarat.common.Domain.{Group, MeetupError, User}
+import com.lambdarat.common.Domain._
 import com.lambdarat.common.services._
 
 object FuncMeetupImpl {
 
-  val registerUser: Users => (User.Name, User.Age) => Either[MeetupError, User.Id] = users => (name, age) => {
+  // Some types are identical, improve
+  type GetUser = User.Id => Either[UsersError, User]
+  type CreateUser = User => Either[MeetupError, User.Id]
+  type DeleteUser = User.Id => Either[MeetupError, User]
+  type GetGroup = Group.Id => Either[GroupsError, Group]
+  type SaveGroup = Group => Either[MeetupError, Group.Id]
+  type CloseGroup = Group.Id => Either[MeetupError, Group]
+  type JoinUserToGroup = (User, Group) => Either[MeetupError, Group]
+  type RemoveUserFromGroup = (User.Id, Group) => Either[MeetupError, Group]
+
+  val registerUser: CreateUser => (User.Name, User.Age) => Either[MeetupError, User.Id] = createUser => (name, age) => {
 
     val user = User(name, age)
 
-    users.createUser(user)
+    createUser(user)
 
   }
 
-  val deleteUser: Users => User.Id => Either[MeetupError, User] =  users => uid => {
+  val deleteUser: DeleteUser => User.Id => Either[MeetupError, User] =  deleteUser => uid => {
 
-    users.deleteUser(uid)
+    deleteUser(uid)
 
   }
 
-  val registerGroup: Groups => Group.Name => Either[MeetupError, Group.Id] = groups => name => {
+  val registerGroup: SaveGroup => Group.Name => Either[MeetupError, Group.Id] = saveGroup => name => {
 
     val group = Group(name, Seq.empty)
 
-    groups.saveGroup(group)
+    saveGroup(group)
 
   }
 
-  val closeGroup: Groups => Group.Id => Either[MeetupError, Group] = groups => gid => {
+  val closeGroup: CloseGroup => Group.Id => Either[MeetupError, Group] = closeGroup => gid => {
 
-    groups.closeGroup(gid)
+    closeGroup(gid)
 
   }
 
-  val getGroupUsers: Groups => Group.Id => Either[MeetupError, Seq[User]] = groups => gid => {
+  val getGroupUsers: GetGroup => Group.Id => Either[MeetupError, Seq[User]] = getGroup => gid => {
 
     for {
-      group <- groups.getGroup(gid)
+      group <- getGroup(gid)
     } yield {
       group.users
     }
 
   }
 
-  val joinUserToGroup: (Users, Groups, (User, Group) => Either[MeetupError, Group]) => (User.Id, Group.Id) => Either[MeetupError, Group] =
-    (users, groups, manager) => (uid, gid) => {
+  val joinUserToGroup: (GetUser, GetGroup, SaveGroup, JoinUserToGroup) => (User.Id, Group.Id) => Either[MeetupError, Group] =
+    (getUser, getGroup, saveGroup, joinUserToGroup) => (uid, gid) => {
 
     for {
-      user          <- users.getUser(uid)
-      group         <- groups.getGroup(gid)
-      groupWithUser <- manager(user, group)
-      _             <- groups.saveGroup(groupWithUser)
+      user          <- getUser(uid)
+      group         <- getGroup(gid)
+      groupWithUser <- joinUserToGroup(user, group)
+      _             <- saveGroup(groupWithUser)
     } yield {
       groupWithUser
     }
 
   }
 
-  val removeUserFromGroup: (Users, Groups, (User.Id, Group) => Either[MeetupError, Group]) => (User.Id, Group.Id) => Either[MeetupError, Group] =
-    (users, groups, manager) => (uid, gid) => {
+  val removeUserFromGroup: (GetUser, GetGroup, SaveGroup, RemoveUserFromGroup) => (User.Id, Group.Id) => Either[MeetupError, Group] =
+    (getUser, getGroup, saveGroup, removeUserFromGroup) => (uid, gid) => {
 
     for {
-      _           <- users.getUser(uid)
-      group       <- groups.getGroup(gid)
-      groupWoUser <- manager(uid, group)
-      _           <- groups.saveGroup(group)
+      _           <- getUser(uid)
+      group       <- getGroup(gid)
+      groupWoUser <- removeUserFromGroup(uid, group)
+      _           <- saveGroup(group)
     } yield {
       groupWoUser
     }

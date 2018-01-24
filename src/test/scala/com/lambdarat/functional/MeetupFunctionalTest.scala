@@ -28,13 +28,13 @@ class MeetupFunctionalTest extends FlatSpec with Matchers {
 
   private val groups = new GroupsImpl
 
-  private val joinManager = FuncManagerImpl.addUserToGroup(mockNotifier)
+  private val joinManager = FuncManagerImpl.addUserToGroup(mockNotifier.notifyManagerEvent)
 
-  private val userRegister = FuncMeetupImpl.registerUser(users)
+  private val userRegister = FuncMeetupImpl.registerUser(users.createUser)
 
-  private val groupRegister = FuncMeetupImpl.registerGroup(groups)
+  private val groupRegister = FuncMeetupImpl.registerGroup(groups.saveGroup)
 
-  private val joinMeetup = FuncMeetupImpl.joinUserToGroup(users, groups, joinManager)
+  private val joinMeetup = FuncMeetupImpl.joinUserToGroup(users.getUser, groups.getGroup, groups.saveGroup, joinManager)
 
   "A meetup" should "add a user to a group if both exist" in {
 
