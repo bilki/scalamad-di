@@ -5,7 +5,20 @@ import com.lambdarat.common.services.{GroupsImpl, Notifier, UsersImpl}
 import com.lambdarat.reader.MeetupImplTypes.MeetupContext
 import org.scalatest.{FlatSpec, Matchers}
 
+import cats.Id
+import cats.data.{EitherT, Reader}
+
 class MeetupReaderTest extends FlatSpec with Matchers {
+
+  type MeetupErrorOrValue[A] = EitherT[Id, MeetupError, A]
+
+  implicit class ReaderEitherT[A, B, C](r: Reader[A, Either[B, C]]) {
+    def toEitherT = {
+      type ErrorOrValue[V] = EitherT[Id, B, V]
+
+      r.mapF[ErrorOrValue, C](EitherT.fromEither[Id].apply[B, C])
+    }
+  }
 
   // This notifier does not notify anybody
   private val mockNotifier = new Notifier {
@@ -43,15 +56,10 @@ class MeetupReaderTest extends FlatSpec with Matchers {
 
   "A meetup" should "add a user to a group if both exist" in {
 
-    import cats.data.ReaderT
-    import cats.instances.either._
-
-    type MeetupOperation[A] = Either[MeetupError, A]
-
     val joinAttempt = for {
-      uid   <- ReaderT[MeetupOperation, MeetupContext, User.Id](meetup.registerUser(User.Name("Pepe"), User.Age(25)).run)
-      gid   <- ReaderT[MeetupOperation, MeetupContext, Group.Id](meetup.registerGroup(Group.Name("ScalaMAD")).run)
-      group <- ReaderT[MeetupOperation, MeetupContext, Group](meetup.joinUserToGroup(uid, gid).run)  // No user notified in real life
+      uid   <- meetup.registerUser(User.Name("Pepe"), User.Age(25)).toEitherT
+      gid   <- meetup.registerGroup(Group.Name("ScalaMAD")).toEitherT
+      group <- meetup.joinUserToGroup(uid, gid).toEitherT  // No user notified in real life
     } yield {
 
       group.gid shouldBe Some(gid)
